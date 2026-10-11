@@ -103,7 +103,7 @@ def main():
     contract_meta = compiled['contracts']['WorldTribe.sol']['WorldTribe']
     contract = w3.eth.contract(address=contract_address, abi=contract_meta['abi'])
 
-    print(f"Listening for Tribe events on {contract_address} via {provider_url}...")
+    print(f"Listening for Tribe events on {contract_address} via configured JSON-RPC provider (endpoint redacted)...")
 
     # 3. Create Event Filters
     # Using 'latest' ensures we only catch new events from this point forward
