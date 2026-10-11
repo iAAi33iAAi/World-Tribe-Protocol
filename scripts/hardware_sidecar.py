@@ -96,7 +96,7 @@ def main():
     w3 = Web3(Web3.HTTPProvider(provider_url))
 
     if not w3.is_connected():
-        print(f"Failed to connect to Ethereum node at {provider_url}.")
+        print("Failed to connect to the configured Ethereum provider.")
         return
 
     # 2. Setup Contract from deployment metadata
