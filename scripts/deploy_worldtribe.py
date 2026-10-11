@@ -103,8 +103,9 @@ def main() -> None:
     w3, ephemeral = get_web3(args.provider_url)
 
     if not w3.is_connected():
-        target = args.provider_url or "in-memory eth-tester"
-        raise SystemExit(f"Failed to connect to provider: {target}")
+        if ephemeral:
+            raise SystemExit("Failed to connect to the in-memory eth-tester provider.")
+        raise SystemExit("Failed to connect to the configured JSON-RPC provider.")
 
     contract_address, transaction_hash, deployment_block = deploy_contract(w3, contract_meta)
     config_path = write_deployment_config(
