@@ -97,3 +97,79 @@ def test_public_deployment_summary_marks_missing_provider():
     public = public_deployment_summary(deployment)
     assert public["provider_configured"] is False
     assert "provider_url" not in public
+
+def test_dashboard_connection_error_does_not_echo_rpc_url(tmp_path, monkeypatch):
+    import dashboard_server as dashboard
+
+    endpoint = "https://rpc.example.invalid/v3/private-token"
+    monkeypatch.setattr(
+        dashboard,
+        "load_deployment",
+        lambda _path: {
+            "provider_url": endpoint,
+            "contract_address": "0x1234567890123456789012345678901234567890",
+        },
+    )
+    monkeypatch.setattr(dashboard, "load_compiled_contract", lambda: {"abi": []})
+
+    class OfflineWeb3:
+        @staticmethod
+        def HTTPProvider(url):
+            assert url == endpoint
+            return url
+
+        def __init__(self, _provider):
+            pass
+
+        @staticmethod
+        def is_connected():
+            return False
+
+    monkeypatch.setattr(dashboard, "Web3", OfflineWeb3)
+    with pytest.raises(SystemExit) as exc:
+        dashboard.get_contract(tmp_path / "deployment.json")
+    assert endpoint not in str(exc.value)
+    assert "configured Ethereum provider" in str(exc.value)
+
+
+def test_sidecar_connection_error_does_not_echo_rpc_url(tmp_path, monkeypatch, capsys):
+    import argparse
+    import hardware_sidecar as sidecar
+
+    endpoint = "https://rpc.example.invalid/v3/private-token"
+    compiled_path = tmp_path / "compiled.json"
+    compiled_path.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(sidecar, "BUILD_PATH", compiled_path)
+    monkeypatch.setattr(
+        sidecar,
+        "parse_args",
+        lambda: argparse.Namespace(config=tmp_path / "deployment.json", provider_url=None),
+    )
+    monkeypatch.setattr(
+        sidecar,
+        "load_deployment",
+        lambda _path: {
+            "provider_url": endpoint,
+            "contract_address": "0x1234567890123456789012345678901234567890",
+            "ephemeral": False,
+        },
+    )
+
+    class OfflineWeb3:
+        @staticmethod
+        def HTTPProvider(url):
+            assert url == endpoint
+            return url
+
+        def __init__(self, _provider):
+            pass
+
+        @staticmethod
+        def is_connected():
+            return False
+
+    monkeypatch.setattr(sidecar, "Web3", OfflineWeb3)
+    sidecar.main()
+    output = capsys.readouterr().out
+    assert endpoint not in output
+    assert "configured Ethereum provider" in output
