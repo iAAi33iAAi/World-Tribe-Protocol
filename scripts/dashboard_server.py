@@ -78,12 +78,22 @@ def get_contract(config_path: Path):
     contract_meta = load_compiled_contract()
     w3 = Web3(Web3.HTTPProvider(deployment["provider_url"]))
     if not w3.is_connected():
-        raise SystemExit(f"Failed to connect to Ethereum node at {deployment['provider_url']}.")
+        raise SystemExit("Failed to connect to the configured Ethereum provider.")
     contract = w3.eth.contract(
         address=deployment["contract_address"],
         abi=contract_meta["abi"],
     )
     return w3, contract, deployment
+
+
+def public_deployment_summary(deployment: dict) -> dict:
+    """Expose non-secret deployment metadata without returning the RPC endpoint."""
+    return {
+        "contract_address": deployment["contract_address"],
+        "provider_configured": bool(deployment.get("provider_url")),
+        "deployment_block": deployment.get("deployment_block"),
+        "generated_at": deployment.get("generated_at"),
+    }
 
 
 def build_status(config_path: Path) -> dict:
@@ -144,12 +154,7 @@ def build_status(config_path: Path) -> dict:
     recent_events.sort(key=lambda item: item["block"], reverse=True)
 
     return {
-        "deployment": {
-            "contract_address": deployment["contract_address"],
-            "provider_url": deployment["provider_url"],
-            "deployment_block": deployment.get("deployment_block"),
-            "generated_at": deployment.get("generated_at"),
-        },
+        "deployment": public_deployment_summary(deployment),
         "contract": {
             "owner": contract.functions.owner().call(),
             "baseline": contract.functions.BASELINE().call(),
@@ -172,7 +177,20 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/status":
             self.handle_status()
             return
+        if parsed.path not in {"/", "/index.html"}:
+            self.send_error(HTTPStatus.NOT_FOUND)
+            return
+        # Only serve the public dashboard entry point. Do not expose source,
+        # build artifacts, deployment configuration, or other repository files.
         super().do_GET()
+
+    def do_HEAD(self):
+        parsed = urlparse(self.path)
+        if parsed.path not in {"/", "/index.html"}:
+            self.send_error(HTTPStatus.NOT_FOUND)
+            return
+        # Keep HEAD parity with GET so it cannot bypass the static-path allowlist.
+        super().do_HEAD()
 
     def handle_status(self):
         try:

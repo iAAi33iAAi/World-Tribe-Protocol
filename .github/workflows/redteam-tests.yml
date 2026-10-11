@@ -1,0 +1,23 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements.txt
+      - run: pip install py-evm
+      - name: Compile current Solidity source before tests
+        run: python scripts/compile_worldtribe.py --solc-version 0.8.0
+      - name: Test contract, sidecar, and dashboard security
+        run: python -m pytest -q scripts

@@ -96,14 +96,14 @@ def main():
     w3 = Web3(Web3.HTTPProvider(provider_url))
 
     if not w3.is_connected():
-        print(f"Failed to connect to Ethereum node at {provider_url}.")
+        print("Failed to connect to the configured Ethereum provider.")
         return
 
     # 2. Setup Contract from deployment metadata
     contract_meta = compiled['contracts']['WorldTribe.sol']['WorldTribe']
     contract = w3.eth.contract(address=contract_address, abi=contract_meta['abi'])
 
-    print(f"Listening for Tribe events on {contract_address} via {provider_url}...")
+    print(f"Listening for Tribe events on {contract_address} via configured JSON-RPC provider (endpoint redacted)...")
 
     # 3. Create Event Filters
     # Using 'latest' ensures we only catch new events from this point forward

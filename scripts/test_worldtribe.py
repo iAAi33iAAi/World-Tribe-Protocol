@@ -116,6 +116,36 @@ def test_non_owner_cannot_set_baseline(w3, contract):
         contract.functions.setBaseline(5000).transact({'from': non_owner})
 
 
+def test_nonmember_cannot_trigger_red_alert(w3, contract):
+    nonmember = w3.eth.accounts[1]
+    with pytest.raises(Exception, match="revert"):
+        contract.functions.triggerRedAlert().transact({"from": nonmember})
+
+    member = contract.functions.tribe(nonmember).call()
+    assert member[0] is False
+    assert member[2] is False
+
+
+def test_nonmember_cannot_be_replenished(w3, contract):
+    nonmember = w3.eth.accounts[1]
+    with pytest.raises(Exception, match="revert"):
+        contract.functions.maintainEquilibrium(nonmember).transact(
+            {"from": w3.eth.accounts[0]}
+        )
+
+    member = contract.functions.tribe(nonmember).call()
+    assert member[0] is False
+    assert member[1] == 0
+
+
+def test_owner_cannot_set_zero_baseline(w3, contract):
+    owner = w3.eth.accounts[0]
+    with pytest.raises(Exception, match="revert"):
+        contract.functions.setBaseline(0).transact({"from": owner})
+
+    assert contract.functions.BASELINE().call() == 1000
+
+
 def test_run_event_listeners_starts_both_loops(monkeypatch):
     calls = []
 

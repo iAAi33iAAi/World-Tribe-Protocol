@@ -114,7 +114,9 @@
                     data: {
                         deploymentBlock: liveStatus.deployment.deployment_block ?? 'Unknown',
                         latestBlock: liveStatus.contract.latest_block,
-                        provider: liveStatus.deployment.provider_url
+                        provider: liveStatus.deployment.provider_configured
+                            ? "Configured (endpoint redacted)"
+                            : "Not configured"
                     }
                 },
                 {
@@ -176,7 +178,7 @@
                 liveStatus = await response.json();
                 status.textContent =
                     `Contract: ${liveStatus.deployment.contract_address}\n` +
-                    `Provider: ${liveStatus.deployment.provider_url}\n` +
+                    `Provider: ${liveStatus.deployment.provider_configured ? 'configured (endpoint redacted)' : 'not configured'}\n` +
                     `Baseline: ${liveStatus.contract.baseline}\n` +
                     `Members: ${liveStatus.contract.member_count}\n` +
                     `Recent events: ${liveStatus.contract.recent_events.length}`;
