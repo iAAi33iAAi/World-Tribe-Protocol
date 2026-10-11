@@ -147,7 +147,7 @@ def test_sidecar_connection_error_does_not_echo_rpc_url(tmp_path, monkeypatch, c
     )
     monkeypatch.setattr(
         sidecar,
-        "load_deployment",
+        "load_deployment_config",
         lambda _path: {
             "provider_url": endpoint,
             "contract_address": "0x1234567890123456789012345678901234567890",
