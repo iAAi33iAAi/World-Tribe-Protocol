@@ -53,6 +53,7 @@ contract WorldTribe {
 
     // Provisioning (The Hearth)
     function maintainEquilibrium(address _member) public {
+        require(tribe[_member].isSovereign, "Not a member");
         if (tribe[_member].creditBalance < BASELINE) {
             tribe[_member].creditBalance = BASELINE;
         }
@@ -60,12 +61,14 @@ contract WorldTribe {
 
     // Mentorship Trigger (No More Cages)
     function triggerRedAlert() public {
+        require(tribe[msg.sender].isSovereign, "Not a member");
         tribe[msg.sender].inCrisis = true;
         emit CrisisSignaled(msg.sender);
     }
 
     // Admin logic
     function setBaseline(uint256 _newBaseline) public onlyOwner {
+        require(_newBaseline > 0, "Baseline must be positive");
         uint256 oldBaseline = BASELINE;
         BASELINE = _newBaseline;
         emit BaselineUpdated(oldBaseline, _newBaseline);
