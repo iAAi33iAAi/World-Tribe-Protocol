@@ -86,6 +86,16 @@ def get_contract(config_path: Path):
     return w3, contract, deployment
 
 
+def public_deployment_summary(deployment: dict) -> dict:
+    """Expose non-secret deployment metadata without returning the RPC endpoint."""
+    return {
+        "contract_address": deployment["contract_address"],
+        "provider_configured": bool(deployment.get("provider_url")),
+        "deployment_block": deployment.get("deployment_block"),
+        "generated_at": deployment.get("generated_at"),
+    }
+
+
 def build_status(config_path: Path) -> dict:
     w3, contract, deployment = get_contract(config_path)
     latest_block = w3.eth.block_number
@@ -144,12 +154,7 @@ def build_status(config_path: Path) -> dict:
     recent_events.sort(key=lambda item: item["block"], reverse=True)
 
     return {
-        "deployment": {
-            "contract_address": deployment["contract_address"],
-            "provider_configured": bool(deployment.get("provider_url")),
-            "deployment_block": deployment.get("deployment_block"),
-            "generated_at": deployment.get("generated_at"),
-        },
+        "deployment": public_deployment_summary(deployment),
         "contract": {
             "owner": contract.functions.owner().call(),
             "baseline": contract.functions.BASELINE().call(),
