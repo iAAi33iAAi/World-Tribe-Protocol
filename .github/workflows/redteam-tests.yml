@@ -19,5 +19,5 @@ jobs:
       - run: pip install py-evm
       - name: Compile current Solidity source before tests
         run: python scripts/compile_worldtribe.py --solc-version 0.8.0
-      - name: Test WorldTribe contract and sidecar
-        run: python -m pytest -q scripts/test_worldtribe.py
+      - name: Test contract, sidecar, and dashboard security
+        run: python -m pytest -q scripts
